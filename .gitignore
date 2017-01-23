@@ -4,3 +4,6 @@
 /BuildAndroid
 /Library
 /.vs
+/Temp
+/Assembly-CSharp.csproj
+/Assembly-CSharp-Editor.csproj
