@@ -19,4 +19,10 @@ public class AlignmentLines : MonoBehaviour {
             lineZ.transform.localPosition = new Vector3(1000, 0, 0);
         }
 	}
+
+
+//fgh;kjhgfddfhgjkl;
+
+
+	
 }
