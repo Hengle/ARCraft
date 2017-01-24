@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class ModelConvert
 {
-	public static Vector3[] s_vertices;
-	public static int[] s_triangularFacets;
-	public static Color[] s_colors;
-	public static Vector3[] s_normals;
+//	public static Vector3[] s_vertices;
+//	public static int[] s_triangularFacets;
+//	public static Color[] s_colors;
+//	public static Vector3[] s_normals;
 	public static MeshFilter mf;
 	public static Mesh mesh;
 
@@ -17,8 +17,8 @@ public class ModelConvert
 	public Model currentModel;
 	public GameObject defaultBlockPrefab;
 	public Vector3 center;
+	public GameObject gameobject;
 
-	private int cubeNum;
 	private int sizeX;
 	private int sizeY;
 	private int sizeZ;
@@ -33,7 +33,6 @@ public class ModelConvert
 
 	public ModelConvert ()
 	{
-		cubeNum = currentModel.blocks.Length;
 		sizeX = currentModel.sizeX;
 		sizeY = currentModel.sizeY;
 		sizeZ = currentModel.sizeZ;
@@ -42,7 +41,10 @@ public class ModelConvert
 		triangularFacets = new List<int> ();
 		normals = new List<Vector3> ();
 		colors = new List<Color> ();
-		mesh = new Mesh ();
+		mf = gameobject.GetComponent<MeshFilter> ();
+		mesh = mf.mesh;
+		mesh.Clear ();
+		center = new Vector3 (sizeX / 2f, sizeY / 2f, sizeZ / 2f);
 
 	}
 
@@ -201,6 +203,13 @@ public class ModelConvert
 
 	public void ColorConvert(Color c, int index){
 		colors[index] = c;
+	}
+
+	public void MeshConvert(){
+		mesh.vertices = vertices.ToArray ();
+		mesh.triangles = triangularFacets.ToArray ();
+		mesh.normals = normals.ToArray ();
+		mesh.colors = colors.ToArray ();
 	}
 }
 
