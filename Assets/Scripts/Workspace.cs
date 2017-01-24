@@ -161,4 +161,12 @@ public class Workspace : MonoBehaviour {
             modelContainer.RemoveBlock(gridPosition[0], gridPosition[1], gridPosition[2]);
         }
     }
+
+    public void ToggleFingerMode(int index) {
+        if (index == 0) {
+            fingerMode = FingerMode.Transforming;
+        } else if (index == 1) {
+            fingerMode = FingerMode.Painting;
+        }
+    }
 }
