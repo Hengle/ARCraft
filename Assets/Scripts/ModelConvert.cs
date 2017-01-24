@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class ModelConvert
 {
-	public static Vector3[] s_peaks;
-	public static Vector3[] s_triangularFacets;
+	public static Vector3[] s_vertices;
+	public static int[] s_triangularFacets;
 	public static Color[] s_colors;
 	public static Vector3[] s_normals;
 	public static MeshFilter mf;
@@ -16,15 +16,15 @@ public class ModelConvert
 
 	public Model currentModel;
 	public GameObject defaultBlockPrefab;
+	public Vector3 center;
 
 	private int cubeNum;
 	private int sizeX;
 	private int sizeY;
 	private int sizeZ;
 
-	private List<Vector3> peaks;
-	private List<Vector4> facets;
-	private List<Vector3> triangularFacets;
+	private List<Vector3> vertices;
+	private List<int> triangularFacets;
 	private List<Vector3> normals;
 	private List<Color> colors;
 
@@ -38,16 +38,15 @@ public class ModelConvert
 		sizeY = currentModel.sizeY;
 		sizeZ = currentModel.sizeZ;
 
-		peaks = new List<Vector3> ();
-		facets = new List<Vector4> ();
-		triangularFacets = new List<Vector3> ();
+		vertices = new List<Vector3> ();
+		triangularFacets = new List<int> ();
 		normals = new List<Vector3> ();
 		colors = new List<Color> ();
 		mesh = new Mesh ();
 
 	}
 
-	public void AddPeaks(){
+	public void AddVertices(){
 
 		int[,,] points = new int[sizeX*2,sizeY*2,sizeZ*2];
 
@@ -75,7 +74,7 @@ public class ModelConvert
 				for (int k = 0; k < sizeZ*2; k++) {
 					int a = points [i, j, k];
 					if ((a < 8)&&(a > 0)) {
-						peaks.Add (new Vector3(i, j, k));
+						vertices.Add (new Vector3(i, j, k));
 					}
 				}
 			}
@@ -100,7 +99,8 @@ public class ModelConvert
 							Vector3 v2 = new Vector3 (i + 1, j + 1, k);
 							Vector3 v3 = new Vector3 (i + 1, j + 1, k + 1);
 							Vector3 v4 = new Vector3 (i + 1, j, k + 1);
-							InsertFacet(v1,v2,v3, v4,Vector3.right,i,j,k);
+							AddVerticesNormalFacet(v1,v2,v3, v4,Vector3.right);
+							AddColors (blockr.color);
 							s [0] = 1;
 						}
 						//back
@@ -111,7 +111,8 @@ public class ModelConvert
 							Vector3 v2 = new Vector3 (i , j , k);
 							Vector3 v3 = new Vector3 (i , j , k + 1);
 							Vector3 v4 = new Vector3 (i + 1, j, k + 1);
-							InsertFacet(v1,v2,v3, v4,Vector3.back,i,j,k);
+							AddVerticesNormalFacet(v1,v2,v3, v4,Vector3.back);
+							AddColors (blockb.color);
 							s [1] = 1;
 						}
 						//left
@@ -122,7 +123,8 @@ public class ModelConvert
 							Vector3 v2 = new Vector3 (i , j+1 , k);
 							Vector3 v3 = new Vector3 (i , j+1 , k + 1);
 							Vector3 v4 = new Vector3 (i , j, k + 1);
-							InsertFacet(v1,v2,v3,v4,Vector3.left,i,j,k);
+							AddVerticesNormalFacet(v1,v2,v3,v4,Vector3.left);
+							AddColors (blockl.color);
 							s [2] = 1;
 						}
 						//forward
@@ -133,7 +135,8 @@ public class ModelConvert
 							Vector3 v2 = new Vector3 (i , j+1 , k);
 							Vector3 v3 = new Vector3 (i , j+1 , k + 1);
 							Vector3 v4 = new Vector3 (i+1 , j+1, k + 1);
-							InsertFacet(v1,v2,v3,v4,Vector3.forward,i,j,k);
+							AddVerticesNormalFacet(v1,v2,v3,v4,Vector3.forward);
+							AddColors (blockf.color);
 							s [3] = 1;
 						}
 						//up
@@ -144,7 +147,8 @@ public class ModelConvert
 							Vector3 v2 = new Vector3 (i+1 , j+1 , k+1);
 							Vector3 v3 = new Vector3 (i , j+1 , k + 1);
 							Vector3 v4 = new Vector3 (i , j, k + 1);
-							InsertFacet(v1,v2,v3,v4,Vector3.up,i,j,k);
+							AddVerticesNormalFacet(v1,v2,v3,v4,Vector3.up);						
+							AddColors (blocku.color);
 							s [4] = 1;
 						}
 						//down
@@ -155,8 +159,9 @@ public class ModelConvert
 							Vector3 v1 = new Vector3 (i+1 , j, k);
 							Vector3 v2 = new Vector3 (i+1 , j+1 , k);
 							Vector3 v3 = new Vector3 (i , j+1 , k );
-							Vector3 v4 = new Vector3 (i , j, k );
-							InsertFacet(v1,v2,v3,v4,Vector3.down,i,j,k);
+							Vector3 v4 = new Vector3 (i , j, k );					
+							AddVerticesNormalFacet(v1,v2,v3,v4,Vector3.down);
+							AddColors (blockd.color);
 						}
 
 
@@ -167,70 +172,36 @@ public class ModelConvert
 	}
 
 
-	private void InsertFacet(Vector3 v1,Vector3 v2, Vector3 v3, Vector3 v4, Vector3 nor,int xi, int y,int z){
-		int index1 = peaks.FindIndex (x => x==v1);
-		int index2 = peaks.FindIndex (x => x==v2);
-		int index3 = peaks.FindIndex (x => x==v3);
-		int index4 = peaks.FindIndex (x => x==v4);
-		if (index1 < 0) {
-			peaks.Add (v1);
-			normals.Add (nor);
-			normals.Add (nor);
-			normals.Add (nor);
-			index1 = peaks.Count;
-		} else {
-			NormalConvert (index1, nor);
-		}
-		if (index2 < 0) {
-			peaks.Add (v2);
-			normals.Add (nor);
-			normals.Add (nor);
-			normals.Add (nor);
-			index2 = peaks.Count;
-		}else {
-			NormalConvert (index2, nor);
-		}
-		if (index3 < 0) {
-			peaks.Add (v3);
-			normals.Add (nor);
-			normals.Add (nor);
-			normals.Add (nor);
-			index3 = peaks.Count;
-		}else {
-			NormalConvert (index3, nor);
-		}
-		if (index4 < 0) {
-			peaks.Add (v4);
-			normals.Add (nor);
-			normals.Add (nor);
-			normals.Add (nor);
-			index4 = peaks.Count;
-		}else {
-			NormalConvert (index4, nor);
-		}
-		Vector3 tmp = new Vector3 (index1, index2, index3);
-		if( triangularFacets.FindIndex(x => x==tmp) < 0){
-			triangularFacets.Add (new Vector3 (index1, index2, index3));
-			triangularFacets.Add (new Vector3 (index3, index4, index1));
-			colors.Add (currentModel.blocks [xi, y, z].color);
-			colors.Add (currentModel.blocks [xi, y, z].color);
-		}
+	private void AddVerticesNormalFacet(Vector3 v1,Vector3 v2, Vector3 v3, Vector3 v4, Vector3 normal){
+		int index = vertices.Count;
+		vertices.Add (v1);
+		vertices.Add (v2);
+		vertices.Add (v3);
+		vertices.Add (v4);
+
+		normals.Add (normal);
+		normals.Add (normal);
+		normals.Add (normal);
+		normals.Add (normal);
+
+		triangularFacets[index/2*3] = index;
+		triangularFacets[index/2*3+1] = index+1;
+		triangularFacets[index/2*3+2] = index+2;
+		triangularFacets[index/2*3+3] = index+2;
+		triangularFacets[index/2*3+4] = index+3;
+
 	}
 
-	private void NormalConvert(int index, Vector3 nor){
-		if (normals [index * 3] == normals [index * 3 + 1]) {
-			normals [index * 3 + 1] = new Vector3 (nor.x,nor.y,nor.z);
-		} else if (normals [index * 3] == normals [index * 3 + 2]) {
-			normals [index * 3 + 2] = new Vector3 (nor.x,nor.y,nor.z);
-		}
+	public void AddColors(Color c){
+		colors.Add (c);
+		colors.Add (c);
+		colors.Add (c);
+		colors.Add (c);
 	}
 
 	public void ColorConvert(Color c, int index){
-		colors [index] = c;
+		colors[index] = c;
 	}
-
-
-
 }
 
 
