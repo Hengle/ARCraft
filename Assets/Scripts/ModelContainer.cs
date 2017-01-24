@@ -74,6 +74,7 @@ public class ModelContainer : MonoBehaviour {
         if (model.GetBlock(x, y, z) == null) {
             model.AddBlock(x, y, z, new Block(blockPrefab));
             GameObject newBlock = Instantiate(blockPrefab);
+            newBlock.name = "B" + x + "-" + y + "-" + z;
             newBlock.transform.SetParent(transform, false);
             newBlock.transform.localPosition = GetVectorPosition(x, y, z);
             blockObjects[x, y, z] = newBlock;
