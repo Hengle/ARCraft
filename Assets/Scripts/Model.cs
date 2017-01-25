@@ -15,7 +15,10 @@ public class Model {
     }
 
     public Block GetBlock(int x, int y, int z) {
-        return blocks[x, y, z];
+        if (x >= 0 && x < sizeX && y >= 0 && y < sizeY && z >= 0 && z < sizeZ) {
+            return blocks[x, y, z];
+        }
+        return null;
     }
 
     public void AddBlock(int x, int y, int z, Block block) {
@@ -23,7 +26,9 @@ public class Model {
     }
 
     public void RemoveBlock(int x, int y, int z) {
-        blocks[x, y, z] = null;
+        if (x >= 0 && x < sizeX && y >= 0 && y < sizeY && z >= 0 && z < sizeZ) {
+            blocks[x, y, z] = null;
+        }
     }
 
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEngine.UI;
 
 // Representing the working area of the user (the blue box)
 public class Workspace : MonoBehaviour {
@@ -23,11 +24,19 @@ public class Workspace : MonoBehaviour {
 
     public GameObject mainCamera;
     public ModelContainer modelContainer;
+    public ColorPicker3D colorPicker;
+    public Image colorImageBlock;
+    public Image colorImageBrush;
+    public Text debugText;
+
     public GameObject defaultBlockPrefab;
     public GameObject defaultGhostPrefab;
+    public Color defaultBlockColor = Color.white;
+    public Color defaultBrushColor = Color.black;
     public GameObject currentBlockPrefab;
     public GameObject currentGhostPrefab;
-    public Color currentBrushColor = Color.black;
+    public Color currentBlockColor;
+    public Color currentBrushColor;
     public float rotationCoefficient = 0.6f;
     public float rotationThreshold = 10;
     public float rotationAnimationDuration = 0.4f;
@@ -47,6 +56,8 @@ public class Workspace : MonoBehaviour {
         currentModel = new Model(10, 10, 10);
         currentBlockPrefab = defaultBlockPrefab;
         currentGhostPrefab = defaultGhostPrefab;
+        SetBlockColor(defaultBlockColor);
+        SetBrushColor(defaultBrushColor);
     }
 
     void Start() {
@@ -151,6 +162,7 @@ public class Workspace : MonoBehaviour {
         if (WithinWorkspace(Cursor3D.Position)) {
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
             modelContainer.AddBlock(gridPosition[0], gridPosition[1], gridPosition[2], currentBlockPrefab);
+            modelContainer.ColorBlock(gridPosition[0], gridPosition[1], gridPosition[2], currentBlockColor);
         }
     }
 
@@ -168,5 +180,27 @@ public class Workspace : MonoBehaviour {
         } else if (index == 1) {
             fingerMode = FingerMode.Painting;
         }
+    }
+
+    public void ToggleColorPicker(int type) {
+        if (!colorPicker.gameObject.activeSelf) {
+            colorPicker.gameObject.SetActive(true);
+            colorPicker.currentType = type;
+        } else if (colorPicker.currentType != type) {
+            colorPicker.currentType = type;
+        } else {
+            colorPicker.gameObject.SetActive(false);
+        }
+    }
+
+
+    public void SetBlockColor(Color color) {
+        currentBlockColor = color;
+        colorImageBlock.color = color;
+    }
+
+    public void SetBrushColor(Color color) {
+        currentBrushColor = color;
+        colorImageBrush.color = color;
     }
 }
