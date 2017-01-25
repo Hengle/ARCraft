@@ -7,6 +7,7 @@ public class ModelContainer : MonoBehaviour {
 
     public Model model;
     public GameObject[,,] blockObjects;
+    public float ghostObjectExtendingDistance = 0.04f;
 
     private List<GameObject> ghostObjects;
 
@@ -97,10 +98,11 @@ public class ModelContainer : MonoBehaviour {
         }
     }
 
-    public void AddGhostBlock(int x, int y, int z, GameObject blockPrefab) {
+    public void AddGhostBlock(int x, int y, int z, int width, int height, int depth, GameObject blockPrefab) {
         GameObject newBlock = Instantiate(blockPrefab);
         newBlock.transform.SetParent(transform, false);
-        newBlock.transform.localPosition = GetVectorPosition(x, y, z);
+        newBlock.transform.localPosition = (GetVectorPosition(x, y, z) + GetVectorPosition(x + width - 1, y + height - 1, z + depth - 1)) / 2;
+        newBlock.transform.localScale = new Vector3(width, height, depth) + 2 * ghostObjectExtendingDistance * Vector3.one;
         ghostObjects.Add(newBlock);
     }
 

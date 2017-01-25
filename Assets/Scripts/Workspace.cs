@@ -7,6 +7,12 @@ using UnityEngine.UI;
 // Representing the working area of the user (the blue box). This class also handles the main operations by the user.
 public class Workspace : MonoBehaviour {
 
+    public enum CursorMode {
+        OneByOne,
+        Continue,
+        Box
+    }
+
     public enum FingerMode {
         Painting,
         Transforming
@@ -41,7 +47,13 @@ public class Workspace : MonoBehaviour {
     public float rotationThreshold = 10;
     public float rotationAnimationDuration = 0.4f;
 
+    public CursorMode cursorMode = CursorMode.OneByOne;
     public FingerMode fingerMode = FingerMode.Transforming;
+
+    private bool isAdding = false;
+    private bool isRemoving = false;
+    private int[] addingStartPosition;
+    private int[] removingStartPosition;
 
     private Quaternion cumulatedRotation = Quaternion.identity;
     private bool rotated = false;
@@ -68,21 +80,45 @@ public class Workspace : MonoBehaviour {
 	void Update () {
         modelContainer.RemoveAllGhostBlocks();
         if (WithinWorkspace(Cursor3D.Position)) {
+            // Add a transparent box at the position of the Cursor3D.
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
-            modelContainer.AddGhostBlock(gridPosition[0], gridPosition[1], gridPosition[2], currentGhostPrefab);
+            modelContainer.AddGhostBlock(gridPosition[0], gridPosition[1], gridPosition[2], 1, 1, 1, currentGhostPrefab);
+        }
+
+        if (cursorMode == CursorMode.Continue) {
+            if (isAdding) {
+                AddAction();
+            }
+            if (isRemoving) {
+                RemoveAction();
+            }
+        } else if (cursorMode == CursorMode.Box) {
+            int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
+            currentModel.ClampToModelSize(gridPosition);
+
+            if (isAdding && addingStartPosition != null) {
+                int x, y, z, w, h, d;
+                GetRectangle(gridPosition, addingStartPosition, out x, out y, out z, out w, out h, out d);
+                modelContainer.RemoveAllGhostBlocks();
+                modelContainer.AddGhostBlock(x, y, z, w, h, d, currentGhostPrefab);
+            } else if (isRemoving && removingStartPosition != null) {
+                int x, y, z, w, h, d;
+                GetRectangle(gridPosition, removingStartPosition, out x, out y, out z, out w, out h, out d);
+                modelContainer.RemoveAllGhostBlocks();
+                modelContainer.AddGhostBlock(x, y, z, w, h, d, currentGhostPrefab);
+            }
         }
 
         if (fingerMode == FingerMode.Painting) {
             for (int i = 0; i < Input.touchCount; i++) {
                 ShootPaint(Input.GetTouch(i).position);
             }
-        }
-
-        if (fingerMode == FingerMode.Transforming) {
+        } else if (fingerMode == FingerMode.Transforming) {
             if (Input.touchCount == 0) {
                 cumulatedRotation = Quaternion.identity;
                 rotated = false;
             } else if (!rotated && !rotating) {
+                // My gestural rotation detection method
                 float minEdge = Mathf.Min(Screen.width, Screen.height);
                 float dist = (mainCamera.transform.position - transform.position).magnitude;
                 float coefficient = dist / minEdge / rotationCoefficient;
@@ -120,6 +156,7 @@ public class Workspace : MonoBehaviour {
         }
 
         if (rotating) {
+            // Rotation animation
             rotationProgress += Time.deltaTime / rotationAnimationDuration;
             modelContainer.transform.localRotation = Quaternion.Slerp(originalRotation, targetRotation, rotationProgress);
             if (rotationProgress >= 1) {
@@ -127,6 +164,7 @@ public class Workspace : MonoBehaviour {
             }
         }
 
+        // Keep track of the finger positions in the last frame
         oldTouchPositions = new Dictionary<int, Vector3>();
         for (int i = 0; i < Input.touchCount; i++) {
             oldTouchPositions[Input.GetTouch(i).fingerId] = Input.GetTouch(i).position;
@@ -138,6 +176,7 @@ public class Workspace : MonoBehaviour {
         RaycastHit hit;
         if (Physics.Raycast(mainCamera.GetComponent<Camera>().ScreenPointToRay(screenPosition), out hit)) {
             string name = hit.collider.gameObject.name;
+            // Get the position of the block from its name, which is "BX-Y-Z".
             Match match = blockParser.Match(name);
             if (match.Success) {
                 modelContainer.ColorBlock(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[3].Value), currentBrushColor);
@@ -146,6 +185,7 @@ public class Workspace : MonoBehaviour {
         
     }
 
+    // Start a rotation
     public void Rotate(int axis, bool positiveAngle) {
         if (!rotating) {
             rotating = true;
@@ -157,7 +197,62 @@ public class Workspace : MonoBehaviour {
         }
     }
 
-    // Triggered when the add button is pushed
+    // Triggered when the add button is pushed down
+    public void StartAddingAction() {
+        isAdding = true;
+        if (cursorMode == CursorMode.OneByOne || cursorMode == CursorMode.Continue) {
+            AddAction();
+        }
+        addingStartPosition = WithinWorkspace(Cursor3D.Position) ? modelContainer.WorkspaceToGridPosition(Cursor3D.Position) : null;
+    }
+
+    // Triggered when the add button is released
+    public void StopAddingAction() {
+        if (cursorMode == CursorMode.Box && isAdding && addingStartPosition != null) {
+            int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
+            currentModel.ClampToModelSize(gridPosition);
+            int x, y, z, w, h, d;
+            GetRectangle(gridPosition, addingStartPosition, out x, out y, out z, out w, out h, out d);
+            for (int i = x; i < x + w; i++) {
+                for (int j = y; j < y + h; j++) {
+                    for (int k = z; k < z + d; k++) {
+                        modelContainer.AddBlock(i, j, k, currentBlockPrefab);
+                        modelContainer.ColorBlock(i, j, k, currentBlockColor);
+                    }
+                }
+            }
+        }
+        isAdding = false;
+    }
+
+    // Triggered when the remove button is pushed down
+    public void StartRemovingAction() {
+        isRemoving = true;
+        if (cursorMode == CursorMode.OneByOne || cursorMode == CursorMode.Continue) {
+            RemoveAction();
+        }
+        removingStartPosition = WithinWorkspace(Cursor3D.Position) ? modelContainer.WorkspaceToGridPosition(Cursor3D.Position) : null;
+    }
+
+    // Triggered when the remove button is released
+    public void StopRemovingAction() {
+        if (cursorMode == CursorMode.Box && isRemoving && removingStartPosition != null) {
+            int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
+            currentModel.ClampToModelSize(gridPosition);
+            int x, y, z, w, h, d;
+            GetRectangle(gridPosition, removingStartPosition, out x, out y, out z, out w, out h, out d);
+            for (int i = x; i < x + w; i++) {
+                for (int j = y; j < y + h; j++) {
+                    for (int k = z; k < z + d; k++) {
+                        modelContainer.RemoveBlock(i, j, k);
+                    }
+                }
+            }
+        }
+        isRemoving = false;
+    }
+
+    // Add a block at the cursor position
     public void AddAction() {
         if (WithinWorkspace(Cursor3D.Position)) {
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
@@ -166,7 +261,7 @@ public class Workspace : MonoBehaviour {
         }
     }
 
-    // Triggered when the remove button is pushed
+    // Remove a block at the cursor position
     public void RemoveAction() {
         if (WithinWorkspace(Cursor3D.Position)) {
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
@@ -174,6 +269,18 @@ public class Workspace : MonoBehaviour {
         }
     }
 
+    // Called by the button
+    public void ToggleCursorMode(int index) {
+        if (index == 0) {
+            cursorMode = CursorMode.OneByOne;
+        } else if (index == 1) {
+            cursorMode = CursorMode.Continue;
+        } else if (index == 2) {
+            cursorMode = CursorMode.Box;
+        }
+    }
+
+    // Called by the button
     public void ToggleFingerMode(int index) {
         if (index == 0) {
             fingerMode = FingerMode.Transforming;
@@ -182,6 +289,7 @@ public class Workspace : MonoBehaviour {
         }
     }
 
+    // Called by the buttons
     public void ToggleColorPicker(int type) {
         if (!colorPicker.gameObject.activeSelf) {
             colorPicker.gameObject.SetActive(true);
@@ -193,7 +301,6 @@ public class Workspace : MonoBehaviour {
         }
     }
 
-
     public void SetBlockColor(Color color) {
         currentBlockColor = color;
         colorImageBlock.color = color;
@@ -202,5 +309,14 @@ public class Workspace : MonoBehaviour {
     public void SetBrushColor(Color color) {
         currentBrushColor = color;
         colorImageBrush.color = color;
+    }
+
+    private void GetRectangle(int[] p1, int[] p2, out int x, out int y, out int z, out int w, out int h, out int d) {
+        x = Mathf.Min(p1[0], p2[0]);
+        y = Mathf.Min(p1[1], p2[1]);
+        z = Mathf.Min(p1[2], p2[2]);
+        w = Mathf.Abs(p1[0] - p2[0]) + 1;
+        h = Mathf.Abs(p1[1] - p2[1]) + 1;
+        d = Mathf.Abs(p1[2] - p2[2]) + 1;
     }
 }

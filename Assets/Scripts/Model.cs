@@ -32,4 +32,13 @@ public class Model {
         }
     }
 
+    public void ClampToModelSize(int[] position) {
+        if (position[0] < 0) position[0] = 0;
+        if (position[0] >= sizeX) position[0] = sizeX - 1;
+        if (position[1] < 0) position[1] = 0;
+        if (position[1] >= sizeY) position[1] = sizeY - 1;
+        if (position[2] < 0) position[2] = 0;
+        if (position[2] >= sizeZ) position[2] = sizeZ - 1;
+    }
+
 }
