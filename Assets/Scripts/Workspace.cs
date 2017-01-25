@@ -216,8 +216,7 @@ public class Workspace : MonoBehaviour {
             for (int i = x; i < x + w; i++) {
                 for (int j = y; j < y + h; j++) {
                     for (int k = z; k < z + d; k++) {
-                        modelContainer.AddBlock(i, j, k, currentBlockPrefab);
-                        modelContainer.ColorBlock(i, j, k, currentBlockColor);
+                        modelContainer.AddBlock(i, j, k, currentBlockPrefab, currentBlockColor);
                     }
                 }
             }
@@ -256,8 +255,7 @@ public class Workspace : MonoBehaviour {
     public void AddAction() {
         if (WithinWorkspace(Cursor3D.Position)) {
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
-            modelContainer.AddBlock(gridPosition[0], gridPosition[1], gridPosition[2], currentBlockPrefab);
-            modelContainer.ColorBlock(gridPosition[0], gridPosition[1], gridPosition[2], currentBlockColor);
+            modelContainer.AddBlock(gridPosition[0], gridPosition[1], gridPosition[2], currentBlockPrefab, currentBlockColor);
         }
     }
 

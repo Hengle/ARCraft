@@ -72,7 +72,7 @@ public class ModelContainer : MonoBehaviour {
         }
     }
 
-    public void AddBlock(int x, int y, int z, GameObject blockPrefab) {
+    public void AddBlock(int x, int y, int z, GameObject blockPrefab, Color color) {
         if (model.GetBlock(x, y, z) == null) {
             model.AddBlock(x, y, z, new Block(blockPrefab));
             GameObject newBlock = Instantiate(blockPrefab);
@@ -80,6 +80,7 @@ public class ModelContainer : MonoBehaviour {
             newBlock.transform.SetParent(transform, false);
             newBlock.transform.localPosition = GetVectorPosition(x, y, z);
             blockObjects[x, y, z] = newBlock;
+            ColorBlock(x, y, z, color);
         }
     }
 
