@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// The block that represent a color option.
 public class ColorSwatchCube : MonoBehaviour, Interactor3D {
 
     public ColorPicker3D colorPicker;

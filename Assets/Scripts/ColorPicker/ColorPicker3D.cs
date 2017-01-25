@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// Script for the color picker.
 public class ColorPicker3D : MonoBehaviour {
 
     public int currentType; // 0:Block, 1:Brush

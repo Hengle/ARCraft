@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+// This component sends touch events to all the Interactor3D in the scene.  
 public class TouchManager : MonoBehaviour {
 
     public GameObject mainCamera;
@@ -16,11 +17,15 @@ public class TouchManager : MonoBehaviour {
 	void Update () {
         for (int i = 0; i < Input.touchCount; i++) {
             Touch touch = Input.GetTouch(i);
+
+            // Check if an interactor is touched
             Interactor3D interactor = null;
             RaycastHit hit;
             if (Physics.Raycast(mainCamera.GetComponent<Camera>().ScreenPointToRay(touch.position), out hit)) {
                 interactor = hit.collider.GetComponent<Interactor3D>();
             }
+
+            // Send events
             if (touch.phase == TouchPhase.Began) {
                 if (interactor != null) {
                     touchedInteractor.Add(touch.fingerId, interactor);

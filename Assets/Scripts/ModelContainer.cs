@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// The ModelContainer contains a Model and do the visualization.
 public class ModelContainer : MonoBehaviour {
 
     public Model model;

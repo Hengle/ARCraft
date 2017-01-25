@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// The model represent an object made from blocks.
 public class Model {
 
     public int sizeX, sizeY, sizeZ;

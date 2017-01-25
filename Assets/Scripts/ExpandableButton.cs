@@ -3,14 +3,16 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections;
 
+// A button that opens a list of selections to choose from.
 public class ExpandableButton : MonoBehaviour {
 
     public Button[] choices;
     public GameObject[] icons;
 
+    // Create an event that can be set via the inspector.
     [System.Serializable]
     public class OnSelectEvent : UnityEvent<int> {}
-    public OnSelectEvent OnSelect;
+    public OnSelectEvent OnSelect; 
 
     public int currentChoice = 0;
 

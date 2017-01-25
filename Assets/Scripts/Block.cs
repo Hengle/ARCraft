@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// The basic unit - block
 public class Block {
 
     public GameObject prefab;

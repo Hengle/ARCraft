@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Representing the working area of the user (the blue box)
+// Representing the working area of the user (the blue box). This class also handles the main operations by the user.
 public class Workspace : MonoBehaviour {
 
     public enum FingerMode {
