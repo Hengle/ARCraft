@@ -5609,6 +5609,7 @@ MonoBehaviour:
   colorImageBlock: {fileID: 1037083221}
   colorImageBrush: {fileID: 1918134751}
   quitConfirmPanel: {fileID: 1531119000}
+  fingerModeButton: {fileID: 1735078283}
   blockRotationButton: {fileID: 1415687587}
   debugText: {fileID: 798815493}
   sizes: {x: 0.2, y: 0.2, z: 0.2}

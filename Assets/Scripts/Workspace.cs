@@ -35,6 +35,7 @@ public class Workspace : MonoBehaviour {
     public Image colorImageBlock;
     public Image colorImageBrush;
     public GameObject quitConfirmPanel;
+    public ExpandableButton fingerModeButton;
     public Button blockRotationButton;
     public Text debugText;
 
@@ -208,7 +209,11 @@ public class Workspace : MonoBehaviour {
 
     public void ResetState() {
         modelContainer.transform.rotation = Quaternion.identity;
-        ToggleFingerMode(1);
+        if (!fingerModeButton.IsStarted) {
+            ToggleFingerMode(1);
+        } else {
+            fingerModeButton.SelectAction(1);
+        }
         SetBlockColor(defaultBlockColor);
         SetBrushColor(defaultBrushColor);
         isAdding = false;

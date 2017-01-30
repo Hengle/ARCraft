@@ -14,10 +14,15 @@ public class ExpandableButton : MonoBehaviour {
     public class OnSelectEvent : UnityEvent<int> {}
     public OnSelectEvent OnSelect; 
 
-    public int currentChoice = 0;
+    public int currentChoice = 1;
 
     private GameObject currentIcon;
     private bool expanded = false;
+    private bool isStarted = false;
+
+    public bool IsStarted {
+        get { return isStarted; }
+    }
 
     void Start() {
         for (int i = 0; i < choices.Length; i++) {
@@ -28,6 +33,7 @@ public class ExpandableButton : MonoBehaviour {
         currentIcon = Instantiate(icons[currentChoice]);
         currentIcon.transform.SetParent(transform, false);
         GetComponent<Button>().onClick.AddListener(ClickAction);
+        isStarted = true;
     }
 
     public void ClickAction() {
