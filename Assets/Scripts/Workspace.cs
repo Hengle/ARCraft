@@ -34,6 +34,7 @@ public class Workspace : MonoBehaviour {
     public GameObject worldEditingWalls;
     public Image colorImageBlock;
     public Image colorImageBrush;
+    public GameObject quitConfirmPanel;
     public Button blockRotationButton;
     public Text debugText;
 
@@ -126,7 +127,9 @@ public class Workspace : MonoBehaviour {
 
         if (fingerMode == FingerMode.Painting) {
             for (int i = 0; i < Input.touchCount; i++) {
-                ShootPaint(Input.GetTouch(i).position);
+                if (TouchManager.IsValidTouch(Input.GetTouch(i))) {
+                    ShootPaint(Input.GetTouch(i).position);
+                }
             }
         } else if (fingerMode == FingerMode.Transforming || fingerMode == FingerMode.RotatingBlock) {
             if (Input.touchCount == 0) {
@@ -205,9 +208,12 @@ public class Workspace : MonoBehaviour {
 
     public void ResetState() {
         modelContainer.transform.rotation = Quaternion.identity;
-        fingerMode = FingerMode.Painting;
+        ToggleFingerMode(1);
         SetBlockColor(defaultBlockColor);
         SetBrushColor(defaultBrushColor);
+        isAdding = false;
+        isRemoving = false;
+        rotating = false;
     }
 
     private Regex blockParser = new Regex(@"B(\d+)-(\d+)-(\d+)");
@@ -383,6 +389,15 @@ public class Workspace : MonoBehaviour {
         } else if (editMode == EditMode.Block) {
             ModelLibrary.UpdateBlock(currentModelIndex);
         }
+        ModelLibrary.SaveFile();
+    }
+
+    public void BringUpQuitConfirmPanel() {
+        quitConfirmPanel.SetActive(true);
+    }
+
+    public void HideQuitConfirmPanel() {
+        quitConfirmPanel.SetActive(false);
     }
 
     public void SwitchToWarehouse(bool save) {
@@ -391,6 +406,7 @@ public class Workspace : MonoBehaviour {
         }
         gameObject.SetActive(false);
         UI.SetActive(false);
+        quitConfirmPanel.SetActive(false);
         Warehouse.instance.gameObject.SetActive(true);
         Warehouse.instance.UI.SetActive(true);
         if (isNewModel) {

@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 // The model represent an object made from blocks.
+[Serializable]
 public class Model {
 
     public int sizeX, sizeY, sizeZ;
@@ -39,6 +41,34 @@ public class Model {
         if (position[1] >= sizeY) position[1] = sizeY - 1;
         if (position[2] < 0) position[2] = 0;
         if (position[2] >= sizeZ) position[2] = sizeZ - 1;
+    }
+
+    public void PrepareForSerialization() {
+        for (int i = 0; i < sizeX; i++) {
+            for (int j = 0; j < sizeY; j++) {
+                for (int k = 0; k < sizeZ; k++) {
+                    if (blocks[i, j, k] != null) {
+                        blocks[i, j, k].PrepareForSerialization();
+                    }
+                }
+            }
+        }
+    }
+
+    public void RebuildFromDeserialization() {
+        for (int i = 0; i < sizeX; i++) {
+            for (int j = 0; j < sizeY; j++) {
+                for (int k = 0; k < sizeZ; k++) {
+                    if (blocks[i, j, k] != null) {
+                        if (blocks[i, j, k].blockIndex == -1) {
+                            blocks[i, j, k] = null;
+                        } else {
+                            blocks[i, j, k].RebuildFromDeserialization();
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }

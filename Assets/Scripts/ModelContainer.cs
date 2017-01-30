@@ -62,12 +62,14 @@ public class ModelContainer : MonoBehaviour {
                 for (int z = 0; z < model.sizeZ; z++) {
                     Block block = model.GetBlock(x, y, z);
                     if (block != null) {
-                        GameObject newBlock = Instantiate(ModelLibrary.blockObjects[block.blockIndex]);
-                        newBlock.SetActive(true);
-                        newBlock.transform.SetParent(transform, false);
-                        newBlock.transform.localPosition = GetVectorPosition(x, y, z);
-                        newBlock.transform.localRotation = block.rotation;
-                        blockObjects[x, y, z] = newBlock;
+                        GameObject newBlockObj = Instantiate(ModelLibrary.blockObjects[block.blockIndex]);
+                        newBlockObj.SetActive(true);
+                        newBlockObj.name = "B" + x + "-" + y + "-" + z;
+                        newBlockObj.transform.SetParent(transform, false);
+                        newBlockObj.transform.localPosition = GetVectorPosition(x, y, z);
+                        newBlockObj.transform.localRotation = block.rotation;
+                        blockObjects[x, y, z] = newBlockObj;
+                        ColorBlock(x, y, z, block.color);
                     }
                 }
             }

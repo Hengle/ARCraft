@@ -1,5 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System;
+using UnityEngine.SceneManagement;
 
 public class ModelLibrary : MonoBehaviour {
 
@@ -26,6 +30,8 @@ public class ModelLibrary : MonoBehaviour {
         ghostObjects.Add(basicGhostPrefab);
         modelBlockMat = modelBlockMaterial;
         modelGhostMat = modelGhostMaterial;
+
+        LoadFile();
     }
 
     public static int AddWorld(Model model) {
@@ -62,4 +68,67 @@ public class ModelLibrary : MonoBehaviour {
         sharedMesh.colors = mesh.colors;
     }
 
+    public static void SaveFile() {
+        for (int i = 1; i < blocks.Count; i++) {
+            blocks[i].PrepareForSerialization();
+        }
+        for (int i = 0; i < worlds.Count; i++) {
+            worlds[i].PrepareForSerialization();
+        }
+
+        ModelLibrarySave save = new ModelLibrarySave();
+        save.worlds = worlds;
+        save.blocks = blocks;
+
+        string path = Application.persistentDataPath + "/save.mls";
+        BinaryFormatter formatter = new BinaryFormatter();
+        FileStream saveFile = File.Create(path);
+        formatter.Serialize(saveFile, save);
+        saveFile.Close();
+    }
+
+    public static void LoadFile() {
+        string path = Application.persistentDataPath + "/save.mls";
+        if (!File.Exists(path)) {
+            return;
+        }
+        BinaryFormatter formatter = new BinaryFormatter();
+        FileStream saveFile = null;
+        try {
+            saveFile = File.Open(path, FileMode.Open);
+            ModelLibrarySave save = (ModelLibrarySave)formatter.Deserialize(saveFile);
+            for (int i = 1; i < save.blocks.Count; i++) {
+                save.blocks[i].RebuildFromDeserialization();
+                AddBlock(save.blocks[i]);
+            }
+            for (int i = 0; i < save.worlds.Count; i++) {
+                save.worlds[i].RebuildFromDeserialization();
+                AddWorld(save.worlds[i]);
+            }
+        } catch (Exception e) {
+            
+        } finally {
+            if (saveFile != null) {
+                saveFile.Close();
+            }
+        }
+    }
+
+    public static void DeleteFile() {
+        string path = Application.persistentDataPath + "/save.mls";
+        if (File.Exists(path)) {
+            File.Delete(path);
+        }
+    }
+
+    public void DeleteSaveFile() {
+        DeleteFile();
+        SceneManager.LoadScene("ARCraft");
+    }
+}
+
+[Serializable]
+public class ModelLibrarySave {
+    public List<Model> worlds;
+    public List<Model> blocks;
 }

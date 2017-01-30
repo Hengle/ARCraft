@@ -1,15 +1,23 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 // This component sends touch events to all the Interactor3D in the scene.  
 public class TouchManager : MonoBehaviour {
 
+    public static TouchManager instance;
     public GameObject mainCamera;
+    public GraphicRaycaster raycaster;
 
     private Dictionary<int, Interactor3D> touchedInteractor;
 
-	// Use this for initialization
-	void Start () {
+    void Awake() {
+        instance = this;
+    }
+
+    // Use this for initialization
+    void Start () {
         touchedInteractor = new Dictionary<int, Interactor3D>();
     }
 	
@@ -17,6 +25,9 @@ public class TouchManager : MonoBehaviour {
 	void Update () {
         for (int i = 0; i < Input.touchCount; i++) {
             Touch touch = Input.GetTouch(i);
+            if (!IsValidTouch(touch)) {
+                return;
+            }
 
             // Check if an interactor is touched
             Interactor3D interactor = null;
@@ -49,5 +60,13 @@ public class TouchManager : MonoBehaviour {
                 touchedInteractor.Remove(touch.fingerId);
             }
         }
+    }
+
+    public static bool IsValidTouch(Touch touch) {
+        PointerEventData pointer = new PointerEventData(null);
+        pointer.position = touch.position;
+        List<RaycastResult> results = new List<RaycastResult>();
+        instance.raycaster.Raycast(pointer, results);
+        return results.Count == 0;
     }
 }

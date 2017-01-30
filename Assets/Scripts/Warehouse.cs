@@ -9,6 +9,7 @@ public class Warehouse : MonoBehaviour {
     public GameObject UI;
     public GameObject mainCamera;
     public GameObject addButton, editButton;
+    public GameObject deleteConfirmPanel;
     public ModelContainer modelContainer;
     public GameObject portalPrefab;
 
@@ -23,6 +24,12 @@ public class Warehouse : MonoBehaviour {
 
 	void Start() {
         modelContainer.LoadModel(new Model(10, 10, 10));
+        for (int i = 1; i < ModelLibrary.blocks.Count; i++) {
+            PlaceBlock(i);
+        }
+        for (int i = 0; i < ModelLibrary.worlds.Count; i++) {
+            PlaceWorld(i);
+        }
     }
 
     private Regex blockParser = new Regex(@"B(\d+)-(\d+)-(\d+)");
@@ -44,12 +51,14 @@ public class Warehouse : MonoBehaviour {
         }
 
         for (int i = 0; i < Input.touchCount; i++) {
-            RaycastHit hit;
-            if (Physics.Raycast(mainCamera.GetComponent<Camera>().ScreenPointToRay(Input.GetTouch(i).position), out hit)) {
-                string name = hit.collider.gameObject.name;
-                Match match = blockParser.Match(name);
-                if (match.Success) {
-                    EditBlock(modelContainer.model.GetBlock(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[3].Value)).blockIndex);
+            if (TouchManager.IsValidTouch(Input.GetTouch(i))) {
+                RaycastHit hit;
+                if (Physics.Raycast(mainCamera.GetComponent<Camera>().ScreenPointToRay(Input.GetTouch(i).position), out hit)) {
+                    string name = hit.collider.gameObject.name;
+                    Match match = blockParser.Match(name);
+                    if (match.Success) {
+                        EditBlock(modelContainer.model.GetBlock(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), int.Parse(match.Groups[3].Value)).blockIndex);
+                    }
                 }
             }
         }
@@ -87,11 +96,19 @@ public class Warehouse : MonoBehaviour {
         }
     }
 
+    public void BringUpDeleteComfirmPanel() {
+        deleteConfirmPanel.SetActive(true);
+    }
+
+    public void HideDeleteComfirmPanel() {
+        deleteConfirmPanel.SetActive(false);
+    }
+
     public void PlaceBlock(int blockIndex) {
         int x = 1, y = 0, z = 1;
-        for (; y <= 8; y += 2) {
-            for (; z <= 7; z += 2) {
-                for (; x <= 7; x += 2) {
+        for (y = 0; y <= 8; y += 2) {
+            for (z = 1; z <= 7; z += 2) {
+                for (x = 1; x <= 7; x += 2) {
                     if (modelContainer.model.GetBlock(x, y, z) == null) {
                         goto Found;
                     }
