@@ -6,6 +6,10 @@ using UnityEngine.UI;
 
 // Representing the working area of the user (the blue box). This class also handles the main operations by the user.
 public class Workspace : MonoBehaviour {
+    public enum EditMode {
+        Block,
+        World
+    }
 
     public enum CursorMode {
         OneByOne,
@@ -19,34 +23,32 @@ public class Workspace : MonoBehaviour {
     }
 
     public static Workspace instance;
-    public static Vector3 Sizes {
-        get { return new Vector3(0.2f, 0.2f, 0.2f); }
-    }
-    public static Model currentModel;
 
-    public static bool WithinWorkspace(Vector3 position) {
-        return Mathf.Abs(position.x) < Sizes.x / 2 && Mathf.Abs(position.y) < Sizes.y / 2 && Mathf.Abs(position.z) < Sizes.z / 2;
-    }
-
+    public GameObject UI;
     public GameObject mainCamera;
     public ModelContainer modelContainer;
     public ColorPicker3D colorPicker;
+    public BlockPalette blockPalette;
+    public GameObject blockEditingWalls;
+    public GameObject worldEditingWalls;
     public Image colorImageBlock;
     public Image colorImageBrush;
     public Text debugText;
 
-    public GameObject defaultBlockPrefab;
-    public GameObject defaultGhostPrefab;
+    public Vector3 sizes = new Vector3(0.2f, 0.2f, 0.2f);
     public Color defaultBlockColor = Color.white;
     public Color defaultBrushColor = Color.black;
-    public GameObject currentBlockPrefab;
-    public GameObject currentGhostPrefab;
-    public Color currentBlockColor;
-    public Color currentBrushColor;
     public float rotationCoefficient = 0.6f;
     public float rotationThreshold = 10;
     public float rotationAnimationDuration = 0.4f;
 
+    public Model currentModel;
+    public bool isNewModel = true;
+    public int currentModelIndex = -1;
+    public int currentBlockIndex = 0;
+    public Color currentBlockColor;
+    public Color currentBrushColor;
+    public EditMode editMode = EditMode.Block;
     public CursorMode cursorMode = CursorMode.OneByOne;
     public FingerMode fingerMode = FingerMode.Transforming;
 
@@ -65,15 +67,13 @@ public class Workspace : MonoBehaviour {
     // Use this for initialization
     void Awake () {
         instance = this;
-        currentModel = new Model(10, 10, 10);
-        currentBlockPrefab = defaultBlockPrefab;
-        currentGhostPrefab = defaultGhostPrefab;
         SetBlockColor(defaultBlockColor);
         SetBrushColor(defaultBrushColor);
+        gameObject.SetActive(false);
     }
 
     void Start() {
-        modelContainer.LoadModel(currentModel);
+        //LoadNewModel();
     }
 	
 	// Update is called once per frame
@@ -82,7 +82,7 @@ public class Workspace : MonoBehaviour {
         if (WithinWorkspace(Cursor3D.Position)) {
             // Add a transparent box at the position of the Cursor3D.
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
-            modelContainer.AddGhostBlock(gridPosition[0], gridPosition[1], gridPosition[2], 1, 1, 1, currentGhostPrefab);
+            modelContainer.AddGhostBlock(gridPosition[0], gridPosition[1], gridPosition[2], 1, 1, 1, currentBlockIndex);
         }
 
         if (cursorMode == CursorMode.Continue) {
@@ -100,12 +100,22 @@ public class Workspace : MonoBehaviour {
                 int x, y, z, w, h, d;
                 GetRectangle(gridPosition, addingStartPosition, out x, out y, out z, out w, out h, out d);
                 modelContainer.RemoveAllGhostBlocks();
-                modelContainer.AddGhostBlock(x, y, z, w, h, d, currentGhostPrefab);
+                if (currentBlockIndex == 0) {
+                    modelContainer.AddGhostBlock(x, y, z, w, h, d, 0);
+                } else {
+                    for (int i = x; i < x + w; i++) {
+                        for (int j = y; j < y + h; j++) {
+                            for (int k = z; k < z + d; k++) {
+                                modelContainer.AddGhostBlock(i, j, k, 1, 1, 1, currentBlockIndex);
+                            }
+                        }
+                    }
+                }
             } else if (isRemoving && removingStartPosition != null) {
                 int x, y, z, w, h, d;
                 GetRectangle(gridPosition, removingStartPosition, out x, out y, out z, out w, out h, out d);
                 modelContainer.RemoveAllGhostBlocks();
-                modelContainer.AddGhostBlock(x, y, z, w, h, d, currentGhostPrefab);
+                modelContainer.AddGhostBlock(x, y, z, w, h, d, 0);
             }
         }
 
@@ -171,6 +181,25 @@ public class Workspace : MonoBehaviour {
         }
     }
 
+    public bool WithinWorkspace(Vector3 position) {
+        return Mathf.Abs(position.x) < sizes.x / 2 && Mathf.Abs(position.y) < sizes.y / 2 && Mathf.Abs(position.z) < sizes.z / 2;
+    }
+
+    public void LoadNewModel() {
+        LoadModel(new Model(10, 10, 10), -1);
+    }
+
+    public void LoadModel(Model model, int modelIndex) {
+        currentModel = model;
+        currentModelIndex = modelIndex;
+        modelContainer.LoadModel(model);
+        modelContainer.transform.rotation = Quaternion.identity;
+        isNewModel = modelIndex < 0;
+
+        SetBlockColor(defaultBlockColor);
+        SetBrushColor(defaultBrushColor);
+    }
+
     private Regex blockParser = new Regex(@"B(\d+)-(\d+)-(\d+)");
     public void ShootPaint(Vector2 screenPosition) {
         RaycastHit hit;
@@ -216,7 +245,7 @@ public class Workspace : MonoBehaviour {
             for (int i = x; i < x + w; i++) {
                 for (int j = y; j < y + h; j++) {
                     for (int k = z; k < z + d; k++) {
-                        modelContainer.AddBlock(i, j, k, currentBlockPrefab, currentBlockColor);
+                        modelContainer.AddBlock(i, j, k, currentBlockIndex, currentBlockColor);
                     }
                 }
             }
@@ -255,7 +284,7 @@ public class Workspace : MonoBehaviour {
     public void AddAction() {
         if (WithinWorkspace(Cursor3D.Position)) {
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
-            modelContainer.AddBlock(gridPosition[0], gridPosition[1], gridPosition[2], currentBlockPrefab, currentBlockColor);
+            modelContainer.AddBlock(gridPosition[0], gridPosition[1], gridPosition[2], currentBlockIndex, currentBlockColor);
         }
     }
 
@@ -264,6 +293,21 @@ public class Workspace : MonoBehaviour {
         if (WithinWorkspace(Cursor3D.Position)) {
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
             modelContainer.RemoveBlock(gridPosition[0], gridPosition[1], gridPosition[2]);
+        }
+    }
+
+    public void ToggleEditMode(EditMode mode) {
+        editMode = mode;
+        if (editMode == EditMode.Block) {
+            blockPalette.gameObject.SetActive(false);
+            blockEditingWalls.SetActive(true);
+            worldEditingWalls.SetActive(false);
+            currentBlockIndex = 0;
+        } else {
+            blockPalette.gameObject.SetActive(true);
+            blockPalette.Init();
+            blockEditingWalls.SetActive(false);
+            worldEditingWalls.SetActive(true);
         }
     }
 
@@ -307,6 +351,35 @@ public class Workspace : MonoBehaviour {
     public void SetBrushColor(Color color) {
         currentBrushColor = color;
         colorImageBrush.color = color;
+    }
+
+    public void SaveModel() {
+        if (currentModelIndex == -1) {
+            if (editMode == EditMode.Block) {
+                currentModelIndex = ModelLibrary.AddModel(currentModel);
+            } else {
+                currentModelIndex = ModelLibrary.AddWorld(currentModel);
+            }
+        } else if (editMode == EditMode.Block) {
+            ModelLibrary.UpdateBlock(currentModelIndex);
+        }
+    }
+
+    public void SwitchToWarehouse(bool save) {
+        if (save) {
+            SaveModel();
+        }
+        gameObject.SetActive(false);
+        UI.SetActive(false);
+        Warehouse.instance.gameObject.SetActive(true);
+        Warehouse.instance.UI.SetActive(true);
+        if (isNewModel) {
+            if (editMode == EditMode.Block) {
+                Warehouse.instance.PlaceBlock(currentModelIndex);
+            } else {
+                Warehouse.instance.PlaceWorld(currentModelIndex);
+            }
+        }
     }
 
     private void GetRectangle(int[] p1, int[] p2, out int x, out int y, out int z, out int w, out int h, out int d) {

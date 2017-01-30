@@ -10,10 +10,10 @@ public class Cursor3D : MonoBehaviour {
         get { return position; }
     }
 
-    public Transform workspaceTransform;
+    public Transform spaceTransform;
 	
 	// Update is called once per frame
 	void Update () {
-        position = workspaceTransform.InverseTransformPoint(transform.position);
+        position = spaceTransform.InverseTransformPoint(transform.position);
 	}
 }

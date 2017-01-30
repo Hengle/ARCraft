@@ -5,11 +5,11 @@ using UnityEngine;
 // The basic unit - block
 public class Block {
 
-    public GameObject prefab;
+    public int blockIndex;
     public Color color;
 
-    public Block(GameObject prefab) {
-        this.prefab = prefab;
+    public Block(int blockIndex) {
+        this.blockIndex = blockIndex;
         color = Color.white;
     }
 }

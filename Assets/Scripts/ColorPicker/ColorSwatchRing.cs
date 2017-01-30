@@ -10,10 +10,14 @@ public class ColorSwatchRing : MonoBehaviour, Interactor3D {
     public GameObject colorRingSelection;
 
     public void FingerDown(Touch touch, RaycastHit hit) {
-        float distance = (hit.point - transform.position).magnitude;
+        Transform parent = transform.parent;
+        Vector3 localHitPoint = parent.InverseTransformPoint(hit.point);
+        float distance = (localHitPoint - transform.localPosition).magnitude;
         if (distance > innerRadius && distance < outerRadius) {
             // The user touched on the ring, calculting hue.
-            float angle = Mathf.Atan2(Vector3.Dot(hit.point - transform.position, transform.up), Vector3.Dot(hit.point - transform.position, transform.right));
+            float angle = Mathf.Atan2(
+                Vector3.Dot(localHitPoint - transform.localPosition, parent.InverseTransformDirection(transform.up)),
+                Vector3.Dot(localHitPoint - transform.localPosition, parent.InverseTransformDirection(transform.right)));
             float clockwiseAngle = 90 - angle * Mathf.Rad2Deg;
             if (clockwiseAngle < 0) {
                 clockwiseAngle += 360;
