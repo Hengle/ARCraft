@@ -214,8 +214,8 @@ public class Workspace : MonoBehaviour {
         } else {
             fingerModeButton.SelectAction(1);
         }
-        SetBlockColor(defaultBlockColor);
-        SetBrushColor(defaultBrushColor);
+        //SetBlockColor(defaultBlockColor);
+        //SetBrushColor(defaultBrushColor);
         isAdding = false;
         isRemoving = false;
         rotating = false;
