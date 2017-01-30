@@ -44,7 +44,7 @@ public class BlockPalette : MonoBehaviour {
         for (int i = 0; i < ModelLibrary.blockObjects.Count; i++) {
             blocksContainer.Add(new GameObject());
             blocksContainer[i].transform.SetParent(transform, false);
-            blocksContainer[i].transform.localPosition = new Vector3(i * (1 + gapWidth), 0.5f + hoverHeight, 0);
+            blocksContainer[i].transform.localPosition = new Vector3((i % 10) * (1 + gapWidth), 0.5f + hoverHeight, - (i / 10) * (1 + gapWidth));
 
             blocks.Add(Instantiate(ModelLibrary.blockObjects[i]));
             blocks[i].SetActive(true);
@@ -52,8 +52,8 @@ public class BlockPalette : MonoBehaviour {
             blocks[i].transform.localPosition = Vector3.zero;
             blocks[i].AddComponent<BlockPaletteItem>().blockIndex = i;
         }
-        floor.transform.localPosition = new Vector3((ModelLibrary.blockObjects.Count - 1) * (1 + gapWidth) / 2, 0, 0);
-        floor.transform.localScale = new Vector3(ModelLibrary.blockObjects.Count * (1 + gapWidth) - gapWidth, 1, 1);
+        floor.transform.localPosition = new Vector3((Mathf.Min(ModelLibrary.blockObjects.Count, 10) - 1) * (1 + gapWidth) / 2, 0, - ((ModelLibrary.blockObjects.Count - 1) / 10) * (1 + gapWidth) / 2);
+        floor.transform.localScale = new Vector3(Mathf.Min(ModelLibrary.blockObjects.Count, 10) * (1 + gapWidth) - gapWidth, 1, ((ModelLibrary.blockObjects.Count + 9) / 10) * (1 + gapWidth) - gapWidth);
     }
 
     public void Rotate(int index, int axis, bool positiveAngle) {

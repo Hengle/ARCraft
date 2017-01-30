@@ -401,7 +401,7 @@ public class Workspace : MonoBehaviour {
     }
 
     public void SwitchToWarehouse(bool save) {
-        if (save) {
+        if (save && !currentModel.IsEmpty()) {
             SaveModel();
         }
         gameObject.SetActive(false);

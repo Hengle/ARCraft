@@ -43,6 +43,19 @@ public class Model {
         if (position[2] >= sizeZ) position[2] = sizeZ - 1;
     }
 
+    public bool IsEmpty() {
+        for (int i = 0; i < sizeX; i++) {
+            for (int j = 0; j < sizeY; j++) {
+                for (int k = 0; k < sizeZ; k++) {
+                    if (blocks[i, j, k] != null) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     public void PrepareForSerialization() {
         for (int i = 0; i < sizeX; i++) {
             for (int j = 0; j < sizeY; j++) {
