@@ -19,7 +19,8 @@ public class Workspace : MonoBehaviour {
 
     public enum FingerMode {
         Painting,
-        Transforming
+        Transforming,
+        RotatingBlock
     }
 
     public static Workspace instance;
@@ -33,6 +34,7 @@ public class Workspace : MonoBehaviour {
     public GameObject worldEditingWalls;
     public Image colorImageBlock;
     public Image colorImageBrush;
+    public Button blockRotationButton;
     public Text debugText;
 
     public Vector3 sizes = new Vector3(0.2f, 0.2f, 0.2f);
@@ -50,7 +52,7 @@ public class Workspace : MonoBehaviour {
     public Color currentBrushColor;
     public EditMode editMode = EditMode.Block;
     public CursorMode cursorMode = CursorMode.OneByOne;
-    public FingerMode fingerMode = FingerMode.Transforming;
+    public FingerMode fingerMode = FingerMode.Painting;
 
     private bool isAdding = false;
     private bool isRemoving = false;
@@ -78,11 +80,14 @@ public class Workspace : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+        Quaternion blockRotation = (editMode == EditMode.Block ? Quaternion.identity : blockPalette.GetBlockRotation(currentBlockIndex));
+
         modelContainer.RemoveAllGhostBlocks();
         if (WithinWorkspace(Cursor3D.Position)) {
             // Add a transparent box at the position of the Cursor3D.
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
-            modelContainer.AddGhostBlock(gridPosition[0], gridPosition[1], gridPosition[2], 1, 1, 1, currentBlockIndex);
+            
+            modelContainer.AddGhostBlock(gridPosition[0], gridPosition[1], gridPosition[2], 1, 1, 1, currentBlockIndex, blockRotation);
         }
 
         if (cursorMode == CursorMode.Continue) {
@@ -101,12 +106,12 @@ public class Workspace : MonoBehaviour {
                 GetRectangle(gridPosition, addingStartPosition, out x, out y, out z, out w, out h, out d);
                 modelContainer.RemoveAllGhostBlocks();
                 if (currentBlockIndex == 0) {
-                    modelContainer.AddGhostBlock(x, y, z, w, h, d, 0);
+                    modelContainer.AddGhostBlock(x, y, z, w, h, d, 0, Quaternion.identity);
                 } else {
                     for (int i = x; i < x + w; i++) {
                         for (int j = y; j < y + h; j++) {
                             for (int k = z; k < z + d; k++) {
-                                modelContainer.AddGhostBlock(i, j, k, 1, 1, 1, currentBlockIndex);
+                                modelContainer.AddGhostBlock(i, j, k, 1, 1, 1, currentBlockIndex, blockRotation);
                             }
                         }
                     }
@@ -115,7 +120,7 @@ public class Workspace : MonoBehaviour {
                 int x, y, z, w, h, d;
                 GetRectangle(gridPosition, removingStartPosition, out x, out y, out z, out w, out h, out d);
                 modelContainer.RemoveAllGhostBlocks();
-                modelContainer.AddGhostBlock(x, y, z, w, h, d, 0);
+                modelContainer.AddGhostBlock(x, y, z, w, h, d, 0, Quaternion.identity);
             }
         }
 
@@ -123,7 +128,7 @@ public class Workspace : MonoBehaviour {
             for (int i = 0; i < Input.touchCount; i++) {
                 ShootPaint(Input.GetTouch(i).position);
             }
-        } else if (fingerMode == FingerMode.Transforming) {
+        } else if (fingerMode == FingerMode.Transforming || fingerMode == FingerMode.RotatingBlock) {
             if (Input.touchCount == 0) {
                 cumulatedRotation = Quaternion.identity;
                 rotated = false;
@@ -193,9 +198,14 @@ public class Workspace : MonoBehaviour {
         currentModel = model;
         currentModelIndex = modelIndex;
         modelContainer.LoadModel(model);
-        modelContainer.transform.rotation = Quaternion.identity;
         isNewModel = modelIndex < 0;
 
+        ResetState();
+    }
+
+    public void ResetState() {
+        modelContainer.transform.rotation = Quaternion.identity;
+        fingerMode = FingerMode.Painting;
         SetBlockColor(defaultBlockColor);
         SetBrushColor(defaultBrushColor);
     }
@@ -216,13 +226,17 @@ public class Workspace : MonoBehaviour {
 
     // Start a rotation
     public void Rotate(int axis, bool positiveAngle) {
+        if (fingerMode == FingerMode.RotatingBlock) {
+            blockPalette.Rotate(currentBlockIndex, axis, positiveAngle);
+            return;
+        }
         if (!rotating) {
             rotating = true;
             rotationProgress = 0;
             Vector3 axisVector = Vector3.zero;
             axisVector[axis] = 1;
             originalRotation = modelContainer.transform.localRotation;
-            targetRotation = Quaternion.AngleAxis(positiveAngle ? 90 : -90, axisVector) * modelContainer.transform.localRotation;
+            targetRotation = Quaternion.AngleAxis(positiveAngle ? 90 : -90, axisVector) * originalRotation;
         }
     }
 
@@ -238,6 +252,7 @@ public class Workspace : MonoBehaviour {
     // Triggered when the add button is released
     public void StopAddingAction() {
         if (cursorMode == CursorMode.Box && isAdding && addingStartPosition != null) {
+            Quaternion blockRotation = (editMode == EditMode.Block ? Quaternion.identity : blockPalette.GetBlockRotation(currentBlockIndex));
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
             currentModel.ClampToModelSize(gridPosition);
             int x, y, z, w, h, d;
@@ -245,7 +260,7 @@ public class Workspace : MonoBehaviour {
             for (int i = x; i < x + w; i++) {
                 for (int j = y; j < y + h; j++) {
                     for (int k = z; k < z + d; k++) {
-                        modelContainer.AddBlock(i, j, k, currentBlockIndex, currentBlockColor);
+                        modelContainer.AddBlock(i, j, k, currentBlockIndex, currentBlockColor, blockRotation);
                     }
                 }
             }
@@ -283,8 +298,9 @@ public class Workspace : MonoBehaviour {
     // Add a block at the cursor position
     public void AddAction() {
         if (WithinWorkspace(Cursor3D.Position)) {
+            Quaternion blockRotation = (editMode == EditMode.Block ? Quaternion.identity : blockPalette.GetBlockRotation(currentBlockIndex));
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
-            modelContainer.AddBlock(gridPosition[0], gridPosition[1], gridPosition[2], currentBlockIndex, currentBlockColor);
+            modelContainer.AddBlock(gridPosition[0], gridPosition[1], gridPosition[2], currentBlockIndex, currentBlockColor, blockRotation);
         }
     }
 
@@ -302,12 +318,14 @@ public class Workspace : MonoBehaviour {
             blockPalette.gameObject.SetActive(false);
             blockEditingWalls.SetActive(true);
             worldEditingWalls.SetActive(false);
+            blockRotationButton.enabled = false;
             currentBlockIndex = 0;
-        } else {
+        } else if (editMode == EditMode.World) {
             blockPalette.gameObject.SetActive(true);
             blockPalette.Init();
             blockEditingWalls.SetActive(false);
             worldEditingWalls.SetActive(true);
+            blockRotationButton.enabled = true;
         }
     }
 
@@ -325,9 +343,11 @@ public class Workspace : MonoBehaviour {
     // Called by the button
     public void ToggleFingerMode(int index) {
         if (index == 0) {
-            fingerMode = FingerMode.Transforming;
-        } else if (index == 1) {
             fingerMode = FingerMode.Painting;
+        } else if (index == 1) {
+            fingerMode = FingerMode.Transforming;
+        } else if (index == 2) {
+            fingerMode = FingerMode.RotatingBlock;
         }
     }
 
@@ -356,7 +376,7 @@ public class Workspace : MonoBehaviour {
     public void SaveModel() {
         if (currentModelIndex == -1) {
             if (editMode == EditMode.Block) {
-                currentModelIndex = ModelLibrary.AddModel(currentModel);
+                currentModelIndex = ModelLibrary.AddBlock(currentModel);
             } else {
                 currentModelIndex = ModelLibrary.AddWorld(currentModel);
             }

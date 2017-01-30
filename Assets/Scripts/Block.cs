@@ -7,6 +7,7 @@ public class Block {
 
     public int blockIndex;
     public Color color;
+    public Quaternion rotation;
 
     public Block(int blockIndex) {
         this.blockIndex = blockIndex;

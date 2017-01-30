@@ -99,7 +99,7 @@ public class Warehouse : MonoBehaviour {
             }
         }
         Found:
-        modelContainer.AddBlock(x, y, z, blockIndex, Color.white);
+        modelContainer.AddBlock(x, y, z, blockIndex, Color.white, Quaternion.identity);
     }
 
     public void PlaceWorld(int worldIndex) {

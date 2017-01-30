@@ -7,26 +7,72 @@ public class BlockPalette : MonoBehaviour {
 
     public float gapWidth = 0.5f;
     public float hoverHeight = 0.3f;
+    public float rotationAnimationDuration = 0.4f;
     public List<GameObject> blocks;
+    public List<GameObject> blocksContainer;
 
-	// Use this for initialization
-	void Awake () {
-        blocks = new List<GameObject>();
+    private bool rotating = false;
+    private float rotationProgress = 0;
+    private int rotatingIndex = -1;
+    private Quaternion originalRotation;
+    private Quaternion targetRotation;
+
+    void Update() {
+        for (int i = 0; i < blocksContainer.Count; i++) {
+            blocksContainer[i].transform.localRotation = Workspace.instance.modelContainer.transform.localRotation;
+        }
+
+        if (rotating) {
+            // Rotation animation
+            rotationProgress += Time.deltaTime / rotationAnimationDuration;
+            blocks[rotatingIndex].transform.localRotation = Quaternion.Slerp(originalRotation, targetRotation, rotationProgress);
+            if (rotationProgress >= 1) {
+                rotating = false;
+            }
+        }
     }
 
     public void Init() {
-        for (int i = 0; i < blocks.Count; i++) {
-            Destroy(blocks[i]);
+        if (blocks != null) {
+            for (int i = 0; i < blocks.Count; i++) {
+                Destroy(blocks[i]);
+                Destroy(blocksContainer[i]);
+            }
         }
-        blocks.Clear();
+        blocks = new List<GameObject>();
+        blocksContainer = new List<GameObject>();
         for (int i = 0; i < ModelLibrary.blockObjects.Count; i++) {
+            blocksContainer.Add(new GameObject());
+            blocksContainer[i].transform.SetParent(transform, false);
+            blocksContainer[i].transform.localPosition = new Vector3(i * (1 + gapWidth), 0.5f + hoverHeight, 0);
+
             blocks.Add(Instantiate(ModelLibrary.blockObjects[i]));
             blocks[i].SetActive(true);
-            blocks[i].transform.SetParent(transform, false);
-            blocks[i].transform.localPosition = new Vector3(i * (1 + gapWidth), 0.5f + hoverHeight,  0);
+            blocks[i].transform.SetParent(blocksContainer[i].transform, false);
+            blocks[i].transform.localPosition = Vector3.zero;
             blocks[i].AddComponent<BlockPaletteItem>().blockIndex = i;
         }
         floor.transform.localPosition = new Vector3((ModelLibrary.blockObjects.Count - 1) * (1 + gapWidth) / 2, 0, 0);
         floor.transform.localScale = new Vector3(ModelLibrary.blockObjects.Count * (1 + gapWidth) - gapWidth, 1, 1);
+    }
+
+    public void Rotate(int index, int axis, bool positiveAngle) {
+        if (!rotating) {
+            rotating = true;
+            rotationProgress = 0;
+            rotatingIndex = index;
+            Vector3 axisVector = Vector3.zero;
+            axisVector[axis] = 1;
+            originalRotation = blocks[index].transform.localRotation;
+            targetRotation = Quaternion.AngleAxis(positiveAngle ? 90 : -90, axisVector) * originalRotation;
+        }
+    }
+
+    public Quaternion GetBlockRotation(int blockIndex) {
+        if (rotating && rotatingIndex == blockIndex) {
+            return targetRotation;
+        } else {
+            return blocks[blockIndex].transform.localRotation;
+        }
     }
 }

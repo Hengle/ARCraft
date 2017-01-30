@@ -66,6 +66,7 @@ public class ModelContainer : MonoBehaviour {
                         newBlock.SetActive(true);
                         newBlock.transform.SetParent(transform, false);
                         newBlock.transform.localPosition = GetVectorPosition(x, y, z);
+                        newBlock.transform.localRotation = block.rotation;
                         blockObjects[x, y, z] = newBlock;
                     }
                 }
@@ -73,15 +74,18 @@ public class ModelContainer : MonoBehaviour {
         }
     }
 
-    public void AddBlock(int x, int y, int z, int blockIndex, Color color) {
+    public void AddBlock(int x, int y, int z, int blockIndex, Color color, Quaternion blockRotation) {
         if (model.GetBlock(x, y, z) == null) {
-            model.AddBlock(x, y, z, new Block(blockIndex));
-            GameObject newBlock = Instantiate(ModelLibrary.blockObjects[blockIndex]);
-            newBlock.SetActive(true);
-            newBlock.name = "B" + x + "-" + y + "-" + z;
-            newBlock.transform.SetParent(transform, false);
-            newBlock.transform.localPosition = GetVectorPosition(x, y, z);
-            blockObjects[x, y, z] = newBlock;
+            Block newBlock = new Block(blockIndex);
+            newBlock.rotation = blockRotation;
+            model.AddBlock(x, y, z, newBlock);
+            GameObject newBlockObj = Instantiate(ModelLibrary.blockObjects[blockIndex]);
+            newBlockObj.SetActive(true);
+            newBlockObj.name = "B" + x + "-" + y + "-" + z;
+            newBlockObj.transform.SetParent(transform, false);
+            newBlockObj.transform.localPosition = GetVectorPosition(x, y, z);
+            newBlockObj.transform.localRotation = blockRotation;
+            blockObjects[x, y, z] = newBlockObj;
             ColorBlock(x, y, z, color);
         }
     }
@@ -101,11 +105,12 @@ public class ModelContainer : MonoBehaviour {
         }
     }
 
-    public void AddGhostBlock(int x, int y, int z, int width, int height, int depth, int blockIndex) {
+    public void AddGhostBlock(int x, int y, int z, int width, int height, int depth, int blockIndex, Quaternion blockRotation) {
         GameObject newBlock = Instantiate(ModelLibrary.ghostObjects[blockIndex]);
         newBlock.transform.SetParent(transform, false);
         newBlock.transform.localPosition = (GetVectorPosition(x, y, z) + GetVectorPosition(x + width - 1, y + height - 1, z + depth - 1)) / 2;
         newBlock.transform.localScale = new Vector3(width, height, depth) + 2 * ghostObjectExtendingDistance * Vector3.one;
+        newBlock.transform.localRotation = blockRotation;
         newBlock.SetActive(true);
         ghostObjects.Add(newBlock);
     }

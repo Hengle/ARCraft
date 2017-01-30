@@ -33,7 +33,7 @@ public class ModelLibrary : MonoBehaviour {
         return worlds.Count - 1;
     }
 
-    public static int AddModel(Model model) {
+    public static int AddBlock(Model model) {
         Mesh mesh = ModelConvertor.ConvertToMesh(model);
         GameObject obj = new GameObject();
         obj.AddComponent<MeshFilter>().sharedMesh = mesh;
@@ -61,4 +61,5 @@ public class ModelLibrary : MonoBehaviour {
         sharedMesh.normals = mesh.normals;
         sharedMesh.colors = mesh.colors;
     }
+
 }
