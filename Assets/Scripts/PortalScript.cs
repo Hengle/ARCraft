@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// This class controls a portal in the warehouse area, which links to a created world.
 public class PortalScript : MonoBehaviour, Interactor3D {
 
     public int worldIndex = -1;
@@ -9,6 +10,7 @@ public class PortalScript : MonoBehaviour, Interactor3D {
     private int fingerId = -1;
 
     void Update() {
+        // Rotating portal special effect!
         innerQuad.transform.rotation *= Quaternion.AngleAxis(90 * Time.deltaTime, Vector3.forward);
     }
 

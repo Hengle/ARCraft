@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+// This class controls the block selecting area for world creation.
 public class BlockPalette : MonoBehaviour {
 
     public GameObject floor;

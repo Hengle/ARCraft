@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Text.RegularExpressions;
 
+// The warehouse is the brown box area where all the custom blocks and world portals are stored. This class also handles the main operations by the user.
 public class Warehouse : MonoBehaviour {
 
     public static Warehouse instance;
 
+    // Linked in the Unity Editor
     public GameObject UI;
     public GameObject mainCamera;
     public GameObject addButton, editButton;
@@ -35,6 +37,7 @@ public class Warehouse : MonoBehaviour {
     private Regex blockParser = new Regex(@"B(\d+)-(\d+)-(\d+)");
     // Update is called once per frame
     void Update() {
+        // When the Cursor3D is on a warehouse block object, change "Add Block" button to "Edit Block" button.
         int[] pos = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
         if (modelContainer.model.GetBlock(pos[0], pos[1], pos[2]) == null) {
             if (cursorOnModel) {
@@ -50,6 +53,7 @@ public class Warehouse : MonoBehaviour {
             }
         }
 
+        // When touching a warehouse block object, enter directly to workspace editing mode.
         for (int i = 0; i < Input.touchCount; i++) {
             if (TouchManager.IsValidTouch(Input.GetTouch(i))) {
                 RaycastHit hit;
@@ -96,14 +100,6 @@ public class Warehouse : MonoBehaviour {
         }
     }
 
-    public void BringUpDeleteComfirmPanel() {
-        deleteConfirmPanel.SetActive(true);
-    }
-
-    public void HideDeleteComfirmPanel() {
-        deleteConfirmPanel.SetActive(false);
-    }
-
     public void PlaceBlock(int blockIndex) {
         int x = 1, y = 0, z = 1;
         for (y = 0; y <= 8; y += 2) {
@@ -133,5 +129,15 @@ public class Warehouse : MonoBehaviour {
         UI.SetActive(false);
         Workspace.instance.gameObject.SetActive(true);
         Workspace.instance.UI.SetActive(true);
+    }
+
+    // Called by the delete button
+    public void BringUpDeleteComfirmPanel() {
+        deleteConfirmPanel.SetActive(true);
+    }
+
+    // Called by the cancel button
+    public void HideDeleteComfirmPanel() {
+        deleteConfirmPanel.SetActive(false);
     }
 }

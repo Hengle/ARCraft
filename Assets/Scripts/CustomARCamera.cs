@@ -12,6 +12,6 @@ public class CustomARCamera : ARCamera {
     }
 
     public new void LateUpdate() {
-
+        // Do nothing
     }
 }

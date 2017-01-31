@@ -5,6 +5,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System;
 using UnityEngine.SceneManagement;
 
+// The ModelLibrary is where all the block and world models are saved. It also builds the corresponding GameObjects of blocks to be put in the scene.
+// The ModelLibrary supports save & load on local file system.
 public class ModelLibrary : MonoBehaviour {
 
     public static List<Model> worlds;
@@ -133,6 +135,7 @@ public class ModelLibrary : MonoBehaviour {
     }
 }
 
+// The serializable version of the ModelLibrary.
 [Serializable]
 public class ModelLibrarySave {
     public List<Model> worlds;

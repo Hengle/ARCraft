@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
-// This component sends touch events to all the Interactor3D in the scene.  
+// This component sends touch events to all the Interactor3D objects in the scene.  
 public class TouchManager : MonoBehaviour {
 
     public static TouchManager instance;

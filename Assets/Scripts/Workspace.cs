@@ -4,8 +4,9 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Representing the working area of the user (the blue box). This class also handles the main operations by the user.
+// Representing the working area of the user (the blue/white box). This class also handles the main operations by the user.
 public class Workspace : MonoBehaviour {
+
     public enum EditMode {
         Block,
         World
@@ -25,6 +26,7 @@ public class Workspace : MonoBehaviour {
 
     public static Workspace instance;
 
+    // Linked in the Unity Editor
     public GameObject UI;
     public GameObject mainCamera;
     public ModelContainer modelContainer;
@@ -39,6 +41,7 @@ public class Workspace : MonoBehaviour {
     public Button blockRotationButton;
     public Text debugText;
 
+    // Constants
     public Vector3 sizes = new Vector3(0.2f, 0.2f, 0.2f);
     public Color defaultBlockColor = Color.white;
     public Color defaultBrushColor = Color.black;
@@ -46,6 +49,7 @@ public class Workspace : MonoBehaviour {
     public float rotationThreshold = 10;
     public float rotationAnimationDuration = 0.4f;
 
+    // Public variables
     public Model currentModel;
     public bool isNewModel = true;
     public int currentModelIndex = -1;
@@ -56,11 +60,11 @@ public class Workspace : MonoBehaviour {
     public CursorMode cursorMode = CursorMode.OneByOne;
     public FingerMode fingerMode = FingerMode.Painting;
 
+    // Private variables
     private bool isAdding = false;
     private bool isRemoving = false;
     private int[] addingStartPosition;
     private int[] removingStartPosition;
-
     private Quaternion cumulatedRotation = Quaternion.identity;
     private bool rotated = false;
     private bool rotating = false;
@@ -82,13 +86,13 @@ public class Workspace : MonoBehaviour {
 
         modelContainer.RemoveAllGhostBlocks();
         if (WithinWorkspace(Cursor3D.Position)) {
-            // Add a transparent box at the position of the Cursor3D.
+            // Add a transparent box at the position of the Cursor3D
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
-            
             modelContainer.AddGhostBlock(gridPosition[0], gridPosition[1], gridPosition[2], 1, 1, 1, currentBlockIndex, blockAnimatedRotation);
         }
 
         if (cursorMode == CursorMode.Continue) {
+            // Continuously adding or removing blocks in continue cursor mode when holding the button 
             if (isAdding) {
                 AddAction();
             }
@@ -96,6 +100,7 @@ public class Workspace : MonoBehaviour {
                 RemoveAction();
             }
         } else if (cursorMode == CursorMode.Box) {
+            // Show a larger ghost object (simple cube block), or an array of ghost objects (custom blocks) when holding the add/remove button
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
             currentModel.ClampToModelSize(gridPosition);
 
@@ -123,13 +128,16 @@ public class Workspace : MonoBehaviour {
         }
 
         if (fingerMode == FingerMode.Painting) {
+            // Paint touched block
             for (int i = 0; i < Input.touchCount; i++) {
                 if (TouchManager.IsValidTouch(Input.GetTouch(i))) {
                     ShootPaint(Input.GetTouch(i).position);
                 }
             }
         } else if (fingerMode == FingerMode.Transforming || fingerMode == FingerMode.RotatingBlock) {
+            // Rotate scene (FingerMode.Transforming) or current block (FingerMode.RotatingBlock)
             if (Input.touchCount == 0) {
+                // No touch, reset gesture
                 cumulatedRotation = Quaternion.identity;
                 rotated = false;
             } else if (!rotated && !rotating) {
@@ -395,14 +403,6 @@ public class Workspace : MonoBehaviour {
         ModelLibrary.SaveFile();
     }
 
-    public void BringUpQuitConfirmPanel() {
-        quitConfirmPanel.SetActive(true);
-    }
-
-    public void HideQuitConfirmPanel() {
-        quitConfirmPanel.SetActive(false);
-    }
-
     public void SwitchToWarehouse(bool save) {
         if (save && currentModel.IsEmpty()) {
             save = false;
@@ -422,6 +422,16 @@ public class Workspace : MonoBehaviour {
                 Warehouse.instance.PlaceWorld(currentModelIndex);
             }
         }
+    }
+
+    // Called by the return button
+    public void BringUpQuitConfirmPanel() {
+        quitConfirmPanel.SetActive(true);
+    }
+
+    // Called by the cancel button
+    public void HideQuitConfirmPanel() {
+        quitConfirmPanel.SetActive(false);
     }
 
     private void GetRectangle(int[] p1, int[] p2, out int x, out int y, out int z, out int w, out int h, out int d) {

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// An interface representing a touchable 3D object in the scene. 
+// An interface representing a touchable 3D object in the scene. Backed by TouchManager.
 public interface Interactor3D {
 
     // Function executed when the user start touching this object

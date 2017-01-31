@@ -7,7 +7,9 @@ using UnityEngine;
 [Serializable]
 public class Block {
 
+    // 0 means basic white cube, 1 or larger means custom block object
     public int blockIndex;
+
     [NonSerialized]
     public Color color;
     [NonSerialized]

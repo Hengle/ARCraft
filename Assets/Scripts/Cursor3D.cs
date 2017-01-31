@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// This class provides the current position of the 3D cursor in the workspace space.
+// This class provides the current position of the 3D cursor in the workspace/warehouse space.
 public class Cursor3D : MonoBehaviour {
 
     private static Vector3 position;

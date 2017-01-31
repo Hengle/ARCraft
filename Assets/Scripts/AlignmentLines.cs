@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Script for the alignment lines, which intersect at the Cursor3D's position
+// Script for the alignment lines, which always intersect at the Cursor3D's position
 public class AlignmentLines : MonoBehaviour {
 
     public GameObject lineX, lineY, lineZ;
