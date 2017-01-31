@@ -75,21 +75,17 @@ public class Workspace : MonoBehaviour {
         SetBrushColor(defaultBrushColor);
         gameObject.SetActive(false);
     }
-
-    void Start() {
-        //LoadNewModel();
-    }
 	
 	// Update is called once per frame
 	void Update () {
-        Quaternion blockRotation = (editMode == EditMode.Block ? Quaternion.identity : blockPalette.GetBlockRotation(currentBlockIndex));
+        Quaternion blockAnimatedRotation = (editMode == EditMode.Block ? Quaternion.identity : blockPalette.GetBlockAnimatedRotation(currentBlockIndex));
 
         modelContainer.RemoveAllGhostBlocks();
         if (WithinWorkspace(Cursor3D.Position)) {
             // Add a transparent box at the position of the Cursor3D.
             int[] gridPosition = modelContainer.WorkspaceToGridPosition(Cursor3D.Position);
             
-            modelContainer.AddGhostBlock(gridPosition[0], gridPosition[1], gridPosition[2], 1, 1, 1, currentBlockIndex, blockRotation);
+            modelContainer.AddGhostBlock(gridPosition[0], gridPosition[1], gridPosition[2], 1, 1, 1, currentBlockIndex, blockAnimatedRotation);
         }
 
         if (cursorMode == CursorMode.Continue) {
@@ -113,7 +109,7 @@ public class Workspace : MonoBehaviour {
                     for (int i = x; i < x + w; i++) {
                         for (int j = y; j < y + h; j++) {
                             for (int k = z; k < z + d; k++) {
-                                modelContainer.AddGhostBlock(i, j, k, 1, 1, 1, currentBlockIndex, blockRotation);
+                                modelContainer.AddGhostBlock(i, j, k, 1, 1, 1, currentBlockIndex, blockAnimatedRotation);
                             }
                         }
                     }
@@ -162,13 +158,13 @@ public class Workspace : MonoBehaviour {
                 float angleZ = Vector3.Dot(axis, Vector3.forward);
                 Debug.Log(angleX + " " + angleY + " " + angleZ);
                 if (Mathf.Abs(angleX) >= rotationThreshold && Mathf.Abs(angleX) >= Mathf.Abs(angleY) && Mathf.Abs(angleX) >= Mathf.Abs(angleZ)) {
-                    Rotate(0, angleX > 0);
+                    Rotate(Quaternion.AngleAxis(angleX > 0 ? 90 : -90, Vector3.right));
                     rotated = true;
                 } else if (Mathf.Abs(angleY) >= rotationThreshold && Mathf.Abs(angleY) >= Mathf.Abs(angleZ)) {
-                    Rotate(1, angleY > 0);
+                    Rotate(Quaternion.AngleAxis(angleY > 0 ? 90 : -90, Vector3.up));
                     rotated = true;
                 } else if (Mathf.Abs(angleZ) >= rotationThreshold) {
-                    Rotate(2, angleZ > 0);
+                    Rotate(Quaternion.AngleAxis(angleZ > 0 ? 90 : -90, Vector3.forward));
                     rotated = true;
                 }
             }
@@ -199,9 +195,9 @@ public class Workspace : MonoBehaviour {
     }
 
     public void LoadModel(Model model, int modelIndex) {
-        currentModel = model;
+        currentModel = model.Clone();
         currentModelIndex = modelIndex;
-        modelContainer.LoadModel(model);
+        modelContainer.LoadModel(currentModel);
         isNewModel = modelIndex < 0;
 
         ResetState();
@@ -236,18 +232,16 @@ public class Workspace : MonoBehaviour {
     }
 
     // Start a rotation
-    public void Rotate(int axis, bool positiveAngle) {
+    public void Rotate(Quaternion rotation) {
         if (fingerMode == FingerMode.RotatingBlock) {
-            blockPalette.Rotate(currentBlockIndex, axis, positiveAngle);
+            blockPalette.Rotate(currentBlockIndex, Quaternion.Inverse(modelContainer.transform.rotation) * rotation * modelContainer.transform.rotation);
             return;
         }
         if (!rotating) {
             rotating = true;
             rotationProgress = 0;
-            Vector3 axisVector = Vector3.zero;
-            axisVector[axis] = 1;
             originalRotation = modelContainer.transform.localRotation;
-            targetRotation = Quaternion.AngleAxis(positiveAngle ? 90 : -90, axisVector) * originalRotation;
+            targetRotation = rotation * originalRotation;
         }
     }
 
@@ -388,11 +382,15 @@ public class Workspace : MonoBehaviour {
         if (currentModelIndex == -1) {
             if (editMode == EditMode.Block) {
                 currentModelIndex = ModelLibrary.AddBlock(currentModel);
-            } else {
+            } else if (editMode == EditMode.World) {
                 currentModelIndex = ModelLibrary.AddWorld(currentModel);
             }
-        } else if (editMode == EditMode.Block) {
-            ModelLibrary.UpdateBlock(currentModelIndex);
+        } else {
+            if (editMode == EditMode.Block) {
+                ModelLibrary.UpdateBlock(currentModelIndex, currentModel);
+            } else if (editMode == EditMode.World) {
+                ModelLibrary.UpdateWorld(currentModelIndex, currentModel);
+            }
         }
         ModelLibrary.SaveFile();
     }
@@ -406,7 +404,10 @@ public class Workspace : MonoBehaviour {
     }
 
     public void SwitchToWarehouse(bool save) {
-        if (save && !currentModel.IsEmpty()) {
+        if (save && currentModel.IsEmpty()) {
+            save = false;
+        }
+        if (save) {
             SaveModel();
         }
         gameObject.SetActive(false);
@@ -414,7 +415,7 @@ public class Workspace : MonoBehaviour {
         quitConfirmPanel.SetActive(false);
         Warehouse.instance.gameObject.SetActive(true);
         Warehouse.instance.UI.SetActive(true);
-        if (isNewModel) {
+        if (isNewModel && save) {
             if (editMode == EditMode.Block) {
                 Warehouse.instance.PlaceBlock(currentModelIndex);
             } else {

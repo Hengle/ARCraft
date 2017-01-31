@@ -27,6 +27,13 @@ public class Block {
         color = Color.white;
     }
 
+    public Block Clone() {
+        Block clone = new Block(blockIndex);
+        clone.color = color;
+        clone.rotation = rotation;
+        return clone;
+    }
+
     public void PrepareForSerialization() {
         _color = new float[] { color.r, color.g, color.b, color.a };
         _rotation = new float[] { rotation.x, rotation.y, rotation.z, rotation.w };

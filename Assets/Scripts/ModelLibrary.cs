@@ -59,9 +59,15 @@ public class ModelLibrary : MonoBehaviour {
         return blocks.Count - 1;
     }
 
-    public static void UpdateBlock(int index) {
+    public static void UpdateWorld(int index, Model newModel) {
+        worlds[index] = newModel;
+    }
+
+    public static void UpdateBlock(int index, Model newModel) {
+        blocks[index] = newModel;
         Mesh mesh = ModelConvertor.ConvertToMesh(blocks[index]);
         Mesh sharedMesh = blockObjects[index].GetComponent<MeshFilter>().sharedMesh;
+        sharedMesh.Clear();
         sharedMesh.vertices = mesh.vertices;
         sharedMesh.triangles = mesh.triangles;
         sharedMesh.normals = mesh.normals;

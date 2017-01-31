@@ -56,6 +56,20 @@ public class Model {
         return true;
     }
 
+    public Model Clone() {
+        Model clone = new Model(sizeX, sizeY, sizeZ);
+        for (int i = 0; i < sizeX; i++) {
+            for (int j = 0; j < sizeY; j++) {
+                for (int k = 0; k < sizeZ; k++) {
+                    if (blocks[i, j, k] != null) {
+                        clone.blocks[i, j, k] = blocks[i, j, k].Clone();
+                    }
+                }
+            }
+        }
+        return clone;
+    }
+
     public void PrepareForSerialization() {
         for (int i = 0; i < sizeX; i++) {
             for (int j = 0; j < sizeY; j++) {

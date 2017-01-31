@@ -56,18 +56,19 @@ public class BlockPalette : MonoBehaviour {
         floor.transform.localScale = new Vector3(Mathf.Min(ModelLibrary.blockObjects.Count, 10) * (1 + gapWidth) - gapWidth, 1, ((ModelLibrary.blockObjects.Count + 9) / 10) * (1 + gapWidth) - gapWidth);
     }
 
-    public void Rotate(int index, int axis, bool positiveAngle) {
+    public void Rotate(int index, Quaternion rotation) {
         if (!rotating) {
             rotating = true;
             rotationProgress = 0;
             rotatingIndex = index;
-            Vector3 axisVector = Vector3.zero;
-            axisVector[axis] = 1;
             originalRotation = blocks[index].transform.localRotation;
-            targetRotation = Quaternion.AngleAxis(positiveAngle ? 90 : -90, axisVector) * originalRotation;
+            targetRotation = rotation * originalRotation;
         }
     }
 
+    public Quaternion GetBlockAnimatedRotation(int blockIndex) {
+        return blocks[blockIndex].transform.localRotation;
+    }
     public Quaternion GetBlockRotation(int blockIndex) {
         if (rotating && rotatingIndex == blockIndex) {
             return targetRotation;
