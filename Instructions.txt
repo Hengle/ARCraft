@@ -1,0 +1,5 @@
+You can simply print out the Markers(base).pdf page to use with this application.
+To achieve better performance, when first starting the application, tap the gear icon at the bottom right and then tap camera preferences button from the debug UI.
+From the prompted setting menu, select a higher resolution with 4:3 aspect ratio.
+To test with the example save file, put save.mls under the following directory of the android phone:
+Android/data/com.SuperContact.ARCraft/files/
