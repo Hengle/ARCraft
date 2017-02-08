@@ -18,10 +18,10 @@ public class ModelConvertor {
                 for (int k = 0; k < model.sizeZ; k++) {
                     Block block = model.GetBlock(i, j, k);
                     if (block != null) {
-                        //   6   7
-                        // 5   8
-                        //   2   3   <- The cube
-                        // 1   4
+                        //   8   7
+                        // 4   3
+                        //   5   6   <- The cube
+                        // 1   2
 
                         // right
                         Block blockr = model.GetBlock(i + 1, j, k);

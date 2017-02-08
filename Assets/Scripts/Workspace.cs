@@ -145,7 +145,6 @@ public class Workspace : MonoBehaviour {
                 float minEdge = Mathf.Min(Screen.width, Screen.height);
                 float dist = (mainCamera.transform.position - transform.position).magnitude;
                 float coefficient = dist / minEdge / rotationCoefficient;
-                Debug.Log(coefficient);
                 for (int i = 0; i < Input.touchCount; i++) {
                     Touch touch = Input.GetTouch(i);
                     if (oldTouchPositions.ContainsKey(touch.fingerId)) {
@@ -164,7 +163,6 @@ public class Workspace : MonoBehaviour {
                 float angleX = Vector3.Dot(axis, Vector3.right);
                 float angleY = Vector3.Dot(axis, Vector3.up);
                 float angleZ = Vector3.Dot(axis, Vector3.forward);
-                Debug.Log(angleX + " " + angleY + " " + angleZ);
                 if (Mathf.Abs(angleX) >= rotationThreshold && Mathf.Abs(angleX) >= Mathf.Abs(angleY) && Mathf.Abs(angleX) >= Mathf.Abs(angleZ)) {
                     Rotate(Quaternion.AngleAxis(angleX > 0 ? 90 : -90, Vector3.right));
                     rotated = true;
